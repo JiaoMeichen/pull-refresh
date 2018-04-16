@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<title>iScroll 实例：下拉刷新，滚动翻页</title>
+		<link rel="stylesheet" type="text/css" href="pulling.css"/>
+		<style type="text/css" media="all">
+			body,
+			ul,
+			li {
+				padding: 0;
+				margin: 0;
+				border: 0;
+			}
+			
+			body {
+				font-size: 12px;
+				-webkit-user-select: none;
+				-webkit-text-size-adjust: none;
+				font-family: helvetica;
+			}
+			
+			#header {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 45px;
+				line-height: 45px;
+				background: #f66;
+				padding: 0;
+				font-size: 16px;
+				text-align: center;
+			}
+			
+			#header a {
+				color: #000;
+				text-decoration: none;
+			}
+			#scroller li {
+				padding: 0 10px;
+				height: 40px;
+				line-height: 40px;
+				border-bottom: 1px solid #ccc;
+				border-top: 1px solid #fff;
+				background-color: #fafafa;
+				font-size: 14px;
+			}
+			
+			#scroller li>a {
+				display: block;
+			}
+			
+		</style>
+	</head>
+
+	<body>
+		<div id="header">
+			<a href="javascript:void(0)">iscroll</a>
+		</div>
+
+		<div id="wrapper">
+			<div id="scroller">
+				<div id="pullDown">
+					<span class="pullDownIcon"></span><span class="pullDownLabel">下拉刷新...</span>
+				</div>
+
+				<ul id="thelist">
+
+				</ul>
+
+				<div id="pullUp">
+					<span class="pullUpIcon"></span><span class="pullUpLabel">上拉加载更多...</span>
+				</div>
+
+			</div>
+		</div>
+
+		<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+		<script src="../iscroll.js"></script>
+		<script src="pulling.js"></script>
+		<script type="text/javascript">
+			var myScroll,
+				pullDownEl, pullDownOffset,
+				pullUpEl, pullUpOffset,
+				pageSize = 10,
+				pageNum = 1;
+			var $type = 2;
+			demo(pageSize, pageNum, $type)
+
+			function demo(pageSize, pageNum, type) {
+				$.ajax({
+					type: "GET",
+					url: "https://app.igamestorm.com/game/list",
+					data: {
+						size: pageSize,
+						page: pageNum,
+						type: type
+					},
+					beforeSend: function(request) { //请求头信息，当前用户id
+						request.setRequestHeader("userId", "72b5b5c2ba114f809fbf21ddf8a160b0");
+					},
+					async: false,
+					success: function(result) {
+						var res = result;
+						if(res.result == 1) {
+							var str = "";
+							if(!res.data && pageNum == 1) {
+								console.log("暂无数据")
+								$("#thelist").html("暂无数据")
+							} else if(!res.data && pageNum != 1) {
+								console.log("已经全部加载")
+								$("#pullUp").hide()
+								//								$("#pullUp .pullUpLabel").html("已经加载到底部了")
+							} else {
+
+								for(var i = 0; i < res.data.length; i++) {
+									str += '<li>' + res.data[i].name + '</li>'
+								}
+								if(pageNum == 1) {
+									$("#thelist").html(str)
+								} else {
+									$("#thelist").append(str)
+								}
+							}
+						}
+					},
+					error: function() {
+
+					}
+				});
+			}
+
+			/**
+			 * 下拉刷新 （自定义实现此方法）
+			 * myScroll.refresh();  // 数据加载完成后，调用界面更新方法
+			 */
+			function pullDownAction() {
+				setTimeout(function(){
+					$("#pullUp").show()
+					pageNum = 1;
+					demo(pageSize, pageNum, $type);
+					myScroll.refresh(); //数据加载完成后，调用界面更新方法 Remember to refresh when contents are loaded (ie: on ajax completion)
+				},200)
+				
+			}
+
+			/**
+			 * 滚动翻页 （自定义实现此方法）
+			 * myScroll.refresh();  // 数据加载完成后，调用界面更新方法
+			 */
+			function pullUpAction() {
+				setTimeout(function(){
+					pageNum += 1;
+					demo(pageSize, pageNum, $type);
+					myScroll.refresh(); // 数据加载完成后，调用界面更新方法 Remember to refresh when contents are loaded (ie: on ajax completion)
+				},200)
+			}
+
+			
+		</script>
+	</body>
+
+</html>
